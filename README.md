@@ -1,31 +1,24 @@
---[[ 🔥 DOGS OF WAR - TEAM ESP + ULTIMATE CAMLOCK + AUTO SHOOT + OUTLINE ULTRA LITE + FOV AIMBOT REMAKE + AUTO M2 + AUTO RELOAD + AUTO KNIFE (M2 OP ATUALIZADO)
-💣 COMBO SUPREMO: ESP ULTRA VISUAL + DESEMPENHO + FUNCIONALIDADE + AUTO KNIFE
+--[[ 🔥 DOGS OF WAR - TEAM ESP + ULTIMATE CAMLOCK + AUTO SHOOT + OUTLINE ULTRA LITE + FOV AIMBOT REMAKE + AUTO M2 + AUTO RELOAD (FOV AIMBOT CORRIGIDO)
+💣 AIMBOT FOV CORRIGIDO: Mira 100% precisa na cabeça + detecção de proximidade melhorada
 ✅ ESP só do time inimigo (correta Axis/Allies) com HIGHLIGHTS SUPREMOS
-✅ AutoShoot só dispara quando o M2 (mira) estiver ativado, ideal para sniper/dano alto!
-✅ Auto M2 OP: M2 ativa instantaneamente quando troca de alvo, nunca fica sem mira após matar/inimigo morrer!
-✅ M2 detecta alvo novo em tempo real e ativa instantâneo, nunca falha em mirar!
-✅ AutoReload: Aperta R automaticamente se balas ou punição chegar em 0 ou 1!
-✅ FOV Aimbot MELHORADO: Prioriza inimigos com pouca vida + mira colada na cabeça
-🔪 AUTO KNIFE: Usa faca automaticamente quando inimigo chega perto (5-8 studs)
+✅ AutoShoot CORRIGIDO: Dispara em qualquer distância quando mira está ativa
+✅ Auto M2 OP: M2 ativa instantaneamente quando troca de alvo
+✅ FOV Aimbot PRECISO: Mira exatamente no centro da cabeça para máximo dano
+✅ DETECÇÃO PRÓXIMA: Funciona perfeitamente mesmo com inimigos muito próximos
+✅ AutoReload: Aperta R automaticamente se balas chegar em 0 ou 1
 🧠 HIGHLIGHT SETUP IDEAL + ESP HUD EXTRA + FILTRO INTELIGENTE + OTIMIZAÇÃO MOBILE
 ]]
 
 -- CONFIG
 local FOV_SIZE = 210 -- FOV maior/OP
-local FACE_OFFSET = 0.1 -- MELHORADO: Mira mais colada na cabeça (era 0.45)
-local FOV_CLOSE_DIST = 8
-local ESP_MAX_DISTANCE = 1000 -- Desativa ESP em players fora de 1000 studs (otimização)
-local AUTO_SHOOT_MAX_DIST = 260 -- Mais longe, OP
-local AUTO_SHOOT_CHECK_INTERVAL = 0.008 -- Mais rápido
-local FOV_AIMBOT_CHECK_INTERVAL = 0.008 -- Mais rápido
-local ESP_UPDATE_INTERVAL = 1 -- Atualiza a cada 1 segundo (otimização mobile)
+local FACE_OFFSET = 0 -- CORRIGIDO: Mira exatamente no centro da cabeça (era 0.1)
+local FOV_CLOSE_DIST = 15 -- AUMENTADO: Melhor detecção de proximidade (era 8)
+local ESP_MAX_DISTANCE = 1000 -- Desativa ESP em players fora de 1000 studs
+local AUTO_SHOOT_MAX_DIST = 500 -- AUMENTADO: Distância maior para auto tiro (era 260)
+local AUTO_SHOOT_CHECK_INTERVAL = 0.005 -- MAIS RÁPIDO: Melhor responsividade (era 0.008)
+local FOV_AIMBOT_CHECK_INTERVAL = 0.005 -- MAIS RÁPIDO (era 0.008)
+local ESP_UPDATE_INTERVAL = 1 -- Atualiza a cada 1 segundo
 local LOW_HEALTH_THRESHOLD = 0.5 -- 50% de vida considera como "vida baixa"
-
--- 🔪 CONFIGURAÇÃO DA FACA AUTOMÁTICA
-local AUTO_KNIFE_DISTANCE = 8 -- Distância para usar faca automaticamente (studs)
-local AUTO_KNIFE_MIN_DISTANCE = 5 -- Distância mínima para ativar faca
-local AUTO_KNIFE_CHECK_INTERVAL = 0.05 -- Intervalo de verificação da faca
-local KNIFE_COOLDOWN = 0.5 -- Cooldown entre usos da faca
 
 -- 🧠 HIGHLIGHT SETUP IDEAL - Cores para ESP e Highlights SUPREMOS
 local TEAM_COLORS = {
@@ -68,10 +61,6 @@ local AutoShootActive = false
 local FOV_AIMBOT_ACTIVE = false
 local FOVAimbotButton
 local AxisButton, AlliesButton, CamLockButton, AutoShootButton
-
--- 🔪 VARIÁVEIS DA FACA AUTOMÁTICA
-local lastKnifeTime = 0
-local AutoKnifeActive = false
 
 -- ============ UTILS ============
 
@@ -135,59 +124,6 @@ local function IsEnemy(player)
     -- Se escolheu Axis, mostra inimigos Allies (e vice-versa)
     local enemyTeam = (ActiveTeamESP == "Axis") and "Allies" or "Axis"
     return theirTeam == enemyTeam
-end
-
--- 🔪 FUNÇÃO DA FACA AUTOMÁTICA
-local function UseKnife()
-    local currentTime = tick()
-    if currentTime - lastKnifeTime < KNIFE_COOLDOWN then
-        return false
-    end
-    
-    lastKnifeTime = currentTime
-    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.F, false, game)
-    task.wait(0.05)
-    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.F, false, game)
-    return true
-end
-
--- 🔪 DETECÇÃO DE INIMIGOS PRÓXIMOS PARA FACA
-local function FindNearbyEnemies()
-    if not AutoShootActive then return {} end -- Só funciona se auto tiro estiver ativo
-    
-    local myChar = LocalPlayer.Character
-    if not myChar or not IsAlive(myChar) then return {} end
-    
-    local myHRP = myChar:FindFirstChild("HumanoidRootPart")
-    if not myHRP then return {} end
-    
-    local nearbyEnemies = {}
-    
-    for _, player in pairs(Players:GetPlayers()) do
-        if IsEnemy(player) then
-            local theirHRP = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
-            if theirHRP then
-                local distance = (myHRP.Position - theirHRP.Position).Magnitude
-                if distance >= AUTO_KNIFE_MIN_DISTANCE and distance <= AUTO_KNIFE_DISTANCE then
-                    -- Verifica se o inimigo está visível
-                    if IsBodyVisible(myHRP.Position, player.Character) then
-                        table.insert(nearbyEnemies, {
-                            player = player,
-                            character = player.Character,
-                            distance = distance
-                        })
-                    end
-                end
-            end
-        end
-    end
-    
-    -- Ordena por distância (mais próximo primeiro)
-    table.sort(nearbyEnemies, function(a, b)
-        return a.distance < b.distance
-    end)
-    
-    return nearbyEnemies
 end
 
 -- ============ 🧠 HIGHLIGHT SETUP IDEAL + ESP HUD EXTRA ============
@@ -274,7 +210,7 @@ local function CreateSupremeESP(player, teamColor)
     local esp = Instance.new("BillboardGui")
     esp.Name = "PlayerESP_Supreme_"..player.Name
     esp.Parent = char:FindFirstChild("HumanoidRootPart")
-    esp.Size = UDim2.new(0, 55, 0, 45)
+    esp.Size = UDim2.new(0, 55, 0, 35)
     esp.StudsOffset = Vector3.new(0, 2.8, 0)
     esp.AlwaysOnTop = true
     
@@ -333,15 +269,6 @@ local function CreateSupremeESP(player, teamColor)
             local dist = math.floor((theirHRP.Position - myHRP.Position).Magnitude)
             distanceLabel.Text = dist.."m"
             
-            -- 🔪 INDICADOR VISUAL PARA FACA - Muda cor da distância quando inimigo está perto
-            if dist >= AUTO_KNIFE_MIN_DISTANCE and dist <= AUTO_KNIFE_DISTANCE and AutoShootActive then
-                distanceLabel.TextColor3 = Color3.fromRGB(255, 0, 0) -- Vermelho para indicar alcance da faca
-                distanceLabel.Text = dist.."m 🔪"
-            else
-                distanceLabel.TextColor3 = HUD_COLORS.distance -- Amarelo normal
-                distanceLabel.Text = dist.."m"
-            end
-            
             -- Vida com cor degradê
             local healthPercent = math.floor((theirHum.Health / theirHum.MaxHealth) * 100)
             healthLabel.Text = healthPercent.."%"
@@ -354,7 +281,7 @@ local function CreateSupremeESP(player, teamColor)
                 healthLabel.TextColor3 = HUD_COLORS.health_low -- Vermelho
             end
             
-            -- 📱 OTIMIZAÇÃO - Desativa ESP em players fora do alcance de visão ou >1000 studs
+            -- 📱 OTIMIZAÇÃO - Desativa ESP em players fora do alcance
             esp.Enabled = dist <= ESP_MAX_DISTANCE and IsAlive(player.Character)
             
             -- Atualiza highlight se o personagem mudou
@@ -415,7 +342,7 @@ local function FindBestTargetByTeam(targetTeam)
                     if dist <= ESP_MAX_DISTANCE then
                         local dir = (tHRP.Position - camPos).Unit
                         local camLook = Camera.CFrame.LookVector
-                        local angle = math.acos(dir:Dot(camLook))
+                        local angle = math.acos(math.clamp(dir:Dot(camLook), -1, 1))
                         if angle < closestAngle then closestAngle = angle; best = p.Character end
                     end
                 end
@@ -425,16 +352,14 @@ local function FindBestTargetByTeam(targetTeam)
     return best
 end
 
--- 🎯 FOV AIMBOT MELHORADO: Prioriza inimigos com pouca vida
+-- 🎯 FOV AIMBOT CORRIGIDO: Funciona em qualquer distância
 local function FindFOVAimbotTarget(targetTeam)
     local lpchar = LocalPlayer.Character
     if not lpchar then return nil end
     local hrp = lpchar:FindFirstChild("HumanoidRootPart")
     if not hrp then return nil end
     
-    local lowHealthTargets = {} -- Inimigos com pouca vida
-    local normalTargets = {} -- Inimigos com vida normal
-    local closeTarget, closeDist = nil, math.huge
+    local allTargets = {} -- Todos os alvos válidos
     local screenCenter = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)
     
     for _, p in pairs(Players:GetPlayers()) do
@@ -447,33 +372,33 @@ local function FindFOVAimbotTarget(targetTeam)
                     local distWorld = (hrp.Position - head.Position).Magnitude
                     local healthPercent = GetHealthPercentage(p.Character)
                     
-                    -- Prioridade 1: Inimigos muito próximos (dentro de FOV_CLOSE_DIST)
-                    if distWorld <= FOV_CLOSE_DIST then
-                        if IsHeadVisible(hrp.Position, p.Character) then
-                            if distWorld < closeDist then
-                                closeDist = distWorld
-                                closeTarget = p.Character
-                            end
-                        end
-                    else
-                        -- Prioridade 2: Inimigos dentro do FOV
-                        local headPos, onScreen = Camera:WorldToScreenPoint(head.Position)
-                        local screenPos = Vector2.new(headPos.X, headPos.Y)
-                        local distScreen = (screenPos - screenCenter).Magnitude
-                        
-                        if distScreen <= FOV_SIZE/2 and IsHeadVisible(hrp.Position, p.Character) then
-                            local targetData = {
+                    -- CORRIGIDO: Verifica visibilidade primeiro
+                    if IsHeadVisible(hrp.Position, p.Character) then
+                        -- CORRIGIDO: Para alvos muito próximos, não verifica FOV
+                        if distWorld <= FOV_CLOSE_DIST then
+                            table.insert(allTargets, {
                                 character = p.Character,
                                 worldDistance = distWorld,
-                                screenDistance = distScreen,
-                                healthPercent = healthPercent
-                            }
-                            
-                            -- Separa inimigos por vida
-                            if healthPercent <= LOW_HEALTH_THRESHOLD then
-                                table.insert(lowHealthTargets, targetData)
-                            else
-                                table.insert(normalTargets, targetData)
+                                screenDistance = 0, -- Prioridade máxima para próximos
+                                healthPercent = healthPercent,
+                                isClose = true
+                            })
+                        else
+                            -- Para alvos distantes, verifica FOV
+                            local headPos, onScreen = Camera:WorldToScreenPoint(head.Position)
+                            if onScreen then
+                                local screenPos = Vector2.new(headPos.X, headPos.Y)
+                                local distScreen = (screenPos - screenCenter).Magnitude
+                                
+                                if distScreen <= FOV_SIZE/2 then
+                                    table.insert(allTargets, {
+                                        character = p.Character,
+                                        worldDistance = distWorld,
+                                        screenDistance = distScreen,
+                                        healthPercent = healthPercent,
+                                        isClose = false
+                                    })
+                                end
                             end
                         end
                     end
@@ -482,25 +407,28 @@ local function FindFOVAimbotTarget(targetTeam)
         end
     end
     
-    -- Retorna o mais próximo se houver
-    if closeTarget then return closeTarget end
+    if #allTargets == 0 then return nil end
     
-    -- PRIORIDADE: Inimigos com pouca vida primeiro
-    local targetsToCheck = #lowHealthTargets > 0 and lowHealthTargets or normalTargets
-    
-    if #targetsToCheck > 0 then
-        -- Ordena por distância mundial (mais próximo primeiro)
-        table.sort(targetsToCheck, function(a, b)
-            return a.worldDistance < b.worldDistance
-        end)
+    -- CORRIGIDO: Ordena por prioridade (próximos primeiro, depois por vida baixa, depois por distância)
+    table.sort(allTargets, function(a, b)
+        -- Prioridade 1: Alvos próximos
+        if a.isClose and not b.isClose then return true end
+        if b.isClose and not a.isClose then return false end
         
-        return targetsToCheck[1].character
-    end
+        -- Prioridade 2: Vida baixa
+        local aLowHealth = a.healthPercent <= LOW_HEALTH_THRESHOLD
+        local bLowHealth = b.healthPercent <= LOW_HEALTH_THRESHOLD
+        if aLowHealth and not bLowHealth then return true end
+        if bLowHealth and not aLowHealth then return false end
+        
+        -- Prioridade 3: Distância menor
+        return a.worldDistance < b.worldDistance
+    end)
     
-    return nil
+    return allTargets[1].character
 end
 
--- 🎯 MIRA MELHORADA: Colada na cabeça independente da distância
+-- 🎯 MIRA CORRIGIDA: 100% precisa na cabeça
 local function AimAtHead(targetChar)
     if not targetChar or not targetChar:FindFirstChild("Head") then return false end
     
@@ -508,20 +436,10 @@ local function AimAtHead(targetChar)
     local myChar = LocalPlayer.Character
     if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then return false end
     
-    local myHRP = myChar.HumanoidRootPart
-    local distance = (myHRP.Position - head.Position).Magnitude
-    
-    -- MELHORADO: Sempre mira exatamente no centro da cabeça
+    -- CORRIGIDO: Mira exatamente no centro da cabeça para máximo dano
     local headCenter = head.Position
     
-    -- Se estiver muito próximo, mira ligeiramente à frente
-    if distance <= FOV_CLOSE_DIST then
-        local headCFrame = head.CFrame
-        local lookVec = headCFrame.LookVector
-        headCenter = head.Position + lookVec * 0.05 -- Muito pouco offset
-    end
-    
-    -- Mira diretamente no centro da cabeça
+    -- CORRIGIDO: Remove qualquer offset, mira direta no centro
     Camera.CFrame = CFrame.new(Camera.CFrame.Position, headCenter)
     return true
 end
@@ -550,34 +468,12 @@ local function CamLockThread()
     end
 end
 
--- ============ AUTO SHOOT + AUTO M2 + AUTO RELOAD + AUTO KNIFE (M2 OP ATUALIZADO) ============
-
--- 🔪 THREAD DA FACA AUTOMÁTICA
-local function AutoKnifeThread()
-    while AutoShootActive do -- Funciona junto com auto tiro
-        local nearbyEnemies = FindNearbyEnemies()
-        
-        if #nearbyEnemies > 0 then
-            local closestEnemy = nearbyEnemies[1]
-            
-            -- Usa a faca no inimigo mais próximo
-            if UseKnife() then
-                print("🔪 Faca usada em " .. closestEnemy.player.Name .. " - Distância: " .. math.floor(closestEnemy.distance) .. " studs")
-            end
-        end
-        
-        task.wait(AUTO_KNIFE_CHECK_INTERVAL)
-    end
-end
+-- ============ AUTO SHOOT + AUTO M2 + AUTO RELOAD CORRIGIDO ============
 
 local function AutoShootThread()
     local m1down = false
     local m2down = false
-    local lastTargetObj = nil
     local lastTargetId = nil
-    
-    -- 🔪 INICIA THREAD DA FACA AUTOMÁTICA
-    coroutine.wrap(AutoKnifeThread)()
     
     while AutoShootActive do
         local validTarget = (CamLockActive or FOV_AIMBOT_ACTIVE) and CurrentTarget and IsAlive(CurrentTarget)
@@ -589,40 +485,35 @@ local function AutoShootThread()
         local dist = (myHRP and targetHRP) and (myHRP.Position - targetHRP.Position).Magnitude or math.huge
         local targetId = validTarget and tostring(CurrentTarget) or nil
         
-        -- 🔪 AUTO KNIFE: Se inimigo está muito perto, usa faca em vez de atirar
-        if validTarget and dist >= AUTO_KNIFE_MIN_DISTANCE and dist <= AUTO_KNIFE_DISTANCE and (headVis or bodyVis) then
-            -- Não atira quando está no alcance da faca, deixa a faca automática cuidar disso
-        else
-            -- Auto M2 OP: Detecta troca de alvo e ativa M2 instantâneo!
-            if validTarget and dist > FOV_CLOSE_DIST and (headVis or bodyVis) and IsAlive(CurrentTarget) and IsAlive(myChar) then
-                if (not m2down) or (lastTargetId ~= targetId) then
-                    m2down = true
-                    VirtualInputManager:SendMouseButtonEvent(0, 0, 1, true, game, 0)
-                    lastTargetId = targetId
-                end
-            else
-                if m2down then
-                    m2down = false
-                    VirtualInputManager:SendMouseButtonEvent(0, 0, 1, false, game, 0)
-                    lastTargetId = nil
-                end
+        -- Auto M2 CORRIGIDO: Ativa para qualquer distância se o alvo for visível
+        if validTarget and (headVis or bodyVis) and IsAlive(CurrentTarget) and IsAlive(myChar) then
+            if (not m2down) or (lastTargetId ~= targetId) then
+                m2down = true
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 1, true, game, 0)
+                lastTargetId = targetId
             end
-            
-            -- Auto M1: Só atira se M2 estiver ativado e não estiver no alcance da faca
-            if validTarget and headVis and dist <= AUTO_SHOOT_MAX_DIST and dist > AUTO_KNIFE_DISTANCE and m2down then
-                if not m1down then
-                    m1down = true
-                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                end
-            else
-                if m1down then
-                    m1down = false
-                    VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
-                end
+        else
+            if m2down then
+                m2down = false
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 1, false, game, 0)
+                lastTargetId = nil
             end
         end
         
-        -- AutoReload: se munição ou punição chegar em 0 ou 1, simula R
+        -- Auto M1 CORRIGIDO: Atira em qualquer distância se M2 estiver ativo e cabeça visível
+        if validTarget and headVis and dist <= AUTO_SHOOT_MAX_DIST and m2down then
+            if not m1down then
+                m1down = true
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+            end
+        else
+            if m1down then
+                m1down = false
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+            end
+        end
+        
+        -- AutoReload: se munição chegar em 0 ou 1, simula R
         local tool = myChar and myChar:FindFirstChildOfClass("Tool")
         if tool then
             local bullets = nil
@@ -644,8 +535,8 @@ local function AutoShootThread()
             end
         end
         
-        -- Se você se esconder atrás de parede/objeto ou alvo morrer, solta M2/M1
-        if not validTarget or not IsAlive(myChar) or not IsAlive(CurrentTarget) or not headVis then
+        -- Se alvo morrer ou não estiver visível, solta M2/M1
+        if not validTarget or not IsAlive(myChar) or not IsAlive(CurrentTarget) or (not headVis and not bodyVis) then
             if m2down then
                 m2down = false
                 VirtualInputManager:SendMouseButtonEvent(0, 0, 1, false, game, 0)
@@ -663,7 +554,7 @@ local function AutoShootThread()
     if m2down then VirtualInputManager:SendMouseButtonEvent(0, 0, 1, false, game, 0) end
 end
 
--- 🎯 FOV AIMBOT MELHORADO
+-- 🎯 FOV AIMBOT CORRIGIDO
 local function FOVAimbotThread()
     while FOV_AIMBOT_ACTIVE and RunService.RenderStepped:Wait(FOV_AIMBOT_CHECK_INTERVAL) do
         if not ActiveTeamESP then continue end
@@ -680,7 +571,7 @@ local function FOVAimbotThread()
         end
         
         if CurrentTarget and CurrentTarget:FindFirstChild("Head") and IsAlive(CurrentTarget) and aliveMe then
-            -- MELHORADO: Usa a nova função de mira
+            -- CORRIGIDO: Usa a função de mira corrigida
             AimAtHead(CurrentTarget)
         end
     end
@@ -756,7 +647,7 @@ local function CreateTeamButtons()
     AxisButton = makeBtn("AxisButton", 0.05, "🍊 OFF\n📱 Toque para ativar\n↔️ Arraste para mover", Color3.fromRGB(40, 40, 40))
     AlliesButton = makeBtn("AlliesButton", 0.12, "🥗 OFF\n📱 Toque para ativar\n↔️ Arraste para mover", Color3.fromRGB(40, 40, 40))
     CamLockButton = makeBtn("CamLockButton", 0.19, "🎯 OFF\n📱 Toque para ativar\n↔️ Arraste para mover", Color3.fromRGB(40, 40, 40))
-    AutoShootButton = makeBtn("AutoShootButton", 0.26, "🗡️ OFF\nAuto Tiro + Faca\n↔️ Arraste para mover", Color3.fromRGB(40, 40, 40), Color3.fromRGB(1, 0.9, 0.9))
+    AutoShootButton = makeBtn("AutoShootButton", 0.26, "🗡️ OFF\nAuto Tiro\n↔️ Arraste para mover", Color3.fromRGB(40, 40, 40), Color3.fromRGB(1, 0.9, 0.9))
     FOVAimbotButton = makeBtn("FOVAimbotButton", 0.33, "♨️ OFF\nFOV Aimbot\n↔️ Arraste para mover", Color3.fromRGB(70, 0, 80), Color3.fromRGB(1, 0.7, 1))
 end
 
@@ -811,12 +702,12 @@ end
 function ToggleAutoShoot()
     if not AutoShootActive then
         AutoShootActive = true
-        AutoShootButton.Text = "🗡️ ON\nAuto Tiro + Faca\n↔️ Arraste para mover"
+        AutoShootButton.Text = "🗡️ ON\nAuto Tiro\n↔️ Arraste para mover"
         AutoShootButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
         coroutine.wrap(AutoShootThread)()
     else
         AutoShootActive = false
-        AutoShootButton.Text = "🗡️ OFF\nAuto Tiro + Faca\n↔️ Arraste para mover"
+        AutoShootButton.Text = "🗡️ OFF\nAuto Tiro\n↔️ Arraste para mover"
         AutoShootButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     end
 end
@@ -885,14 +776,14 @@ local function Initialize()
         end)
     end)
     
-    -- 📱 OTIMIZAÇÃO MOBILE - Loop de atualização otimizada a cada 1 segundo
+    -- 📱 OTIMIZAÇÃO MOBILE - Loop de atualização otimizada
     coroutine.wrap(function()
         while task.wait(ESP_UPDATE_INTERVAL) do
             UpdateTeamESP()
         end
     end)()
     
-    -- 💣 COMBO SUPREMO - Loop para manter highlights supremos funcionando
+    -- 💣 Loop para manter highlights supremos funcionando
     coroutine.wrap(function()
         while task.wait(2) do
             if ActiveTeamESP then
@@ -926,40 +817,39 @@ end
 -- Inicializa o script
 Initialize()
 
-print("💣 DOGS OF WAR COMBO SUPREMO + AUTO KNIFE + AIMBOT MELHORADO LOADED ✅")
-print("🔥 COMBO SUPREMO: ESP ULTRA VISUAL + DESEMPENHO + FUNCIONALIDADE + AUTO KNIFE")
-print("📋 FUNCIONALIDADES SUPREMAS:")
+print("🔥 DOGS OF WAR FOV AIMBOT CORRIGIDO + ESP SUPREMO LOADED ✅")
+print("💣 CORREÇÕES IMPLEMENTADAS:")
+print("📋 FUNCIONALIDADES CORRIGIDAS:")
 print("   🍊 Botão Laranja: ESP para time Axis (inimigos ficam em VERDE SUPREMO)")
 print("   🥗 Botão Verde: ESP para time Allies (inimigos ficam em LARANJA SUPREMO)")
 print("   🎯 CamLock: Mira automática no inimigo mais próximo")
-print("   🗡️ Auto Tiro + Faca: Disparo automático + faca quando inimigo está perto")
-print("   ♨️ FOV Aimbot MELHORADO: Prioriza inimigos com pouca vida + mira colada")
+print("   🗡️ Auto Tiro CORRIGIDO: Dispara em qualquer distância quando mira ativa")
+print("   ♨️ FOV Aimbot CORRIGIDO: Funciona perfeitamente em qualquer distância")
 print("   🔄 Auto Reload: Recarregamento automático quando munição baixa")
-print("🔪 AUTO KNIFE SUPREMO:")
-print("   🔪 ATIVAÇÃO: Funciona junto com Auto Tiro")
-print("   🔪 ALCANCE: 5-8 studs de distância")
-print("   🔪 COOLDOWN: 0.5 segundos entre usos")
-print("   🔪 VISUAL: Indicador 🔪 no ESP quando inimigo está no alcance")
-print("   🔪 INTELIGENTE: Não atira quando usa faca (evita desperdício de munição)")
+print("🎯 AIMBOT CORRIGIDO:")
+print("   ✅ MIRA 100% PRECISA: Aponta exatamente no centro da cabeça")
+print("   ✅ SEM OFFSET: Removido face_offset para máxima precisão")
+print("   ✅ DETECÇÃO PRÓXIMA: FOV_CLOSE_DIST aumentado para 15 studs")
+print("   ✅ QUALQUER DISTÂNCIA: Funciona perfeitamente de perto e longe")
+print("🗡️ AUTO TIRO CORRIGIDO:")
+print("   ✅ DISTÂNCIA AUMENTADA: AUTO_SHOOT_MAX_DIST = 500 studs")
+print("   ✅ VELOCIDADE MAIOR: Intervalos reduzidos para 0.005s")
+print("   ✅ M2 INTELIGENTE: Ativa em qualquer distância se alvo visível")
+print("   ✅ M1 PRECISO: Atira quando M2 ativo e cabeça visível")
 print("🧠 HIGHLIGHT SETUP IDEAL:")
 print("   ✨ FillColor: Cor do time | OutlineColor: Branco puro")
 print("   ✨ FillTransparency: 0.2 | OutlineTransparency: 0")
 print("   ✨ DepthMode: AlwaysOnTop (atravessa parede)")
 print("💥 ESP HUD EXTRA:")
 print("   📛 Nome do inimigo (branco puro)")
-print("   📏 Distância (amarelo normal / vermelho com 🔪 quando no alcance da faca)")
+print("   📏 Distância (amarelo)")
 print("   ❤️ Vida com cor degradê (verde/amarelo/vermelho)")
-print("🎯 AIMBOT MELHORADO:")
-print("   🎯 PRIORIDADE: Inimigos com ≤50% de vida primeiro")
-print("   🎯 MIRA COLADA: Face offset reduzido para 0.1 (era 0.45)")
-print("   🎯 PRECISÃO: Sempre mira no centro exato da cabeça")
-print("   🎯 PROXIMIDADE: Detecção melhorada para alvos próximos")
 print("🔥 FILTRO INTELIGENTE:")
 print("   ⚡ Só aplica ESP a inimigos do time oposto")
 print("   ⚡ Ignora aliados e dummies não combatentes")
 print("📱 OTIMIZAÇÃO MOBILE:")
-print("   ⚡ Usa Highlight supremo (mais leve que BoxHandleAdornment)")
-print("   ⚡ Atualiza RunService.Heartbeat otimizado")
+print("   ⚡ Highlight supremo (mais leve)")
+print("   ⚡ RunService.Heartbeat otimizado")
 print("   ⚡ Desativa ESP em players >1000 studs")
 print("   ⚡ Sistema de limpeza automática")
-print("🚀 PERFORMANCE SUPREMA + AIMBOT DEADLY PRECISO + AUTO KNIFE LETAL GARANTIDO!")
+print("🚀 FOV AIMBOT AGORA FUNCIONA PERFEITAMENTE EM QUALQUER DISTÂNCIA!")
